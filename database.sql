@@ -130,24 +130,64 @@ CREATE TABLE Prescription(
 CREATE TABLE RelatedTo(
     PrescriptionId INTEGER NOT NULL,
     ExperimentName VARCHAR(128) NOT NULL,
-    PRIMARY KEY(PrescriptionId, ExperimentName)
+    PRIMARY KEY(PrescriptionId, ExperimentName),
+    FOREIGN KEY(PrescriptionId) REFERENCES Prescription(PrescriptionId) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY(ExperimentName) REFERENCES Experiment(ExperimentName) ON DELETE CASCADE ON UPDATE CASCADE
+
 );
 
 CREATE TABLE Receipt(
     ReceiptId SERIAL NOT NULL PRIMARY KEY,
+    PrescriptionId INTEGER NOT NULL,
     PatientId NationalIdType NOT NULL,
     TotalCost CurrencyType NOT NULL,
-    PreparationDate DateType NOT NULL,
-    FOREIGN KEY(PatientId) REFERENCES Patient(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
+    PreparationDate DateType NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(PatientId) REFERENCES Patient(NationalId) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY(PrescriptionId) REFERENCES Prescription(PrescriptionId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+
+CREATE OR REPLACE FUNCTION create_receipt() RETURNS trigger AS $create_receipt$
+    BEGIN
+        INSERT INTO Receipt(PatientId, TotalCost, PrescriptionId) VALUES (NEW.PatientId, NEW.Expenses, NEW.PrescriptionId);
+	    RETURN NEW;
+    END;
+$create_receipt$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER create_receipt AFTER INSERT ON Prescription 
+    FOR EACH ROW EXECUTE FUNCTION create_receipt();
+
+
+CREATE OR REPLACE FUNCTION calculate_total_cost() RETURNS trigger AS $calculate_total_cost$
+    BEGIN
+
+        IF (SELECT Count(*) FROM InsuranceCompany WHERE InsuranceName = (SELECT Patient.InsuranceName FROM Patient WHERE NationalId = NEW.PatientId)) = 0 THEN
+            UPDATE Receipt SET
+                TotalCost = NEW.Expenses 
+                WHERE NEW.PrescriptionId=Receipt.PrescriptionId;
+        END IF;
+        IF (SELECT Count(*) FROM InsuranceCompany WHERE InsuranceName = (SELECT Patient.InsuranceName FROM Patient WHERE NationalId = NEW.PatientId)) > 0 THEN
+            UPDATE Receipt SET
+                TotalCost = NEW.Expenses * (
+                    100 - (SELECT "Percentage" FROM InsuranceCompany  WHERE InsuranceName = (SELECT Patient.InsuranceName FROM Patient WHERE NationalId=NEW.PatientId))
+                    ) / 100
+                    
+                WHERE NEW.PrescriptionId=Receipt.PrescriptionId;
+        END IF;
+        RETURN NEW;
+    END;
+$calculate_total_cost$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER calculate_total_cost AFTER UPDATE OF Expenses ON Prescription 
+    FOR EACH ROW EXECUTE FUNCTION calculate_total_cost();
 
 
 CREATE OR REPLACE FUNCTION calculate_expenses() RETURNS trigger AS $calculate_expenses$
     BEGIN
         UPDATE Prescription SET 
         Expenses = Prescription.Expenses + (SELECT ExperimentCost FROM Experiment 
-        WHERE ExperimentName = NEW.ExperimentName
-        AND Prescription.PrescriptionId = NEW.PrescriptionId);
+        WHERE ExperimentName = NEW.ExperimentName)
+        WHERE Prescription.PrescriptionId = NEW.PrescriptionId;
 
 	    RETURN NEW;
     END;
@@ -155,7 +195,6 @@ $calculate_expenses$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER expenses_trigger AFTER INSERT ON RelatedTo 
     FOR EACH ROW EXECUTE FUNCTION calculate_expenses(); 
-
 
 CREATE TABLE "Sample"(
     SampleId SERIAL NOT NULL PRIMARY KEY,
@@ -197,3 +236,17 @@ CREATE TABLE PayCheck(
     "Date" DateType NOT NULL,
     Amount CurrencyType NOT NULL
 );
+
+
+
+CREATE FUNCTION check_paycheck_amount() RETURNS trigger AS $check_paycheck_amount$
+    BEGIN
+        IF NEW.Amount <> (SELECT Salary from Employee WHERE NationalId = NEW.EmployeeId) THEN
+            RAISE EXCEPTION 'pay check amount should be equal to Employee Salary';
+        END IF;
+        RETURN NEW;
+    END;
+$check_paycheck_amount$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_paycheck_amount BEFORE INSERT ON PayCheck
+    FOR EACH ROW EXECUTE FUNCTION check_paycheck_amount();
