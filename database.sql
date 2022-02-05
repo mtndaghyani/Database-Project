@@ -2,7 +2,7 @@ CREATE DATABASE laboratory;
 
 CREATE DOMAIN NationalIdType AS CHAR(10);
 
-CREATE DOMAIN DateType AS DateType;
+CREATE DOMAIN DateType AS TIMESTAMP WITH TIME ZONE;
 
 CREATE DOMAIN TimeType AS TIME WITH TIME ZONE;
 
@@ -10,19 +10,21 @@ CREATE DOMAIN PhoneNumberType AS CHAR(11);
 
 CREATE DOMAIN CurrencyType AS BIGINT;
 
-CREATE DOMAIN GenderType AS CHAR(1) CHECK(VALUE IN("M", "F"));
+CREATE DOMAIN GenderType AS CHAR(1) CHECK(VALUE IN('M', 'F'));
+
 
 CREATE DOMAIN DayType AS VARCHAR(10) CHECK(
     VALUE IN (
-        "Saturday",
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday"
+        'Saturday',
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday'
     )
 );
+
 
 CREATE TABLE Person(
     NationalId NationalIdType NOT NULL PRIMARY KEY,
@@ -34,7 +36,7 @@ CREATE TABLE Person(
     PhoneNumber PhoneNumberType NOT NULL,
     Street VARCHAR(128) NOT NULL,
     Alley VARCHAR(128) NOT NULL,
-    'No' INTEGER NOT NULL,
+    "No" INTEGER NOT NULL
 );
 
 CREATE TABLE Employee(
@@ -49,26 +51,26 @@ CREATE TABLE Patient(
     NationalId NationalIdType NOT NULL PRIMARY KEY,
     InsuranceName VARCHAR(64),
     InsuranceExpirationDate DateType,
-    'Weight' DECIMAL(3, 2),
-    Height DECIMAL(3, 2),
+    "Weight" DECIMAL(5, 2),
+    Height DECIMAL(5, 2),
     FOREIGN KEY (NationalId) REFERENCES Person(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Doctor(
     NationalId NationalIdType NOT NULL PRIMARY KEY,
-    GMCNumber INTEGER NOT NULL,
+    GMCNumber INTEGER UNIQUE NOT NULL,
     FOREIGN KEY (NationalId) REFERENCES Employee(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Experimenter(
     NationalId NationalIdType NOT NULL PRIMARY KEY,
-    GMCNumber INTEGER NOT NULL,
+    GMCNumber INTEGER UNIQUE NOT NULL,
     FOREIGN KEY (NationalId) REFERENCES Employee(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Sampler(
     NationalId NationalIdType NOT NULL PRIMARY KEY,
-    GMCNumber INTEGER NOT NULL,
+    GMCNumber INTEGER UNIQUE NOT NULL,
     FOREIGN KEY (NationalId) REFERENCES Employee(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -85,10 +87,11 @@ CREATE TABLE Secratary(
 CREATE TABLE InsuranceCompany(
     InsuranceId SERIAL NOT NULL PRIMARY KEY,
     InsuranceName VARCHAR(128) NOT NULL UNIQUE,
-    'Percentage' DECIMAL(3, 2) NOT NULL,
-    'Limit' CurrencyType NOT NULL,
+    "Percentage" DECIMAL(4, 2) NOT NULL ,
+    "Limit" CurrencyType NOT NULL,
     StartDate DateType NOT NULL,
     EndDate DateType NOT NULL,
+    CHECK("Percentage" <= 100 AND "Percentage" >= 0)
 );
 
 CREATE TABLE EducationDegree(
@@ -112,7 +115,7 @@ CREATE TABLE DiseaseBackground(
 
 CREATE TABLE Experiment(
     ExperimentName VARCHAR(128) NOT NULL PRIMARY KEY,
-    ExperimentCost CurrencyType NOT NULL,
+    ExperimentCost CurrencyType NOT NULL
 );
 
 CREATE TABLE Prescription(
@@ -120,7 +123,7 @@ CREATE TABLE Prescription(
     PatientId NationalIdType NOT NULL,
     ReferDoctor VARCHAR(128) NOT NULL,
     Expenses CurrencyType NOT NULL DEFAULT 0,
-    'Date' DateType NOT NULL,
+    "Date" DateType NOT NULL,
     FOREIGN KEY(PatientId) REFERENCES Patient(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -138,7 +141,23 @@ CREATE TABLE Receipt(
     FOREIGN KEY(PatientId) REFERENCES Patient(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE 'Sample'(
+
+CREATE OR REPLACE FUNCTION calculate_expenses() RETURNS trigger AS $calculate_expenses$
+    BEGIN
+        UPDATE Prescription SET 
+        Expenses = Prescription.Expenses + (SELECT ExperimentCost FROM Experiment 
+        WHERE ExperimentName = NEW.ExperimentName
+        AND Prescription.PrescriptionId = NEW.PrescriptionId);
+
+	    RETURN NEW;
+    END;
+$calculate_expenses$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER expenses_trigger AFTER INSERT ON RelatedTo 
+    FOR EACH ROW EXECUTE FUNCTION calculate_expenses(); 
+
+
+CREATE TABLE "Sample"(
     SampleId SERIAL NOT NULL PRIMARY KEY,
     PatientId NationalIdType NOT NULL,
     ExperimentName VARCHAR(128) NOT NULL,
@@ -156,25 +175,25 @@ CREATE TABLE Result(
     PrescriptionId INTEGER NOT NULL UNIQUE,
     SampleId INTEGER NOT NULL,
     ExperimentDate DateType NOT NULL,
-    'Description' VARCHAR(256),
-    'Comment' VARCHAR(256) PRIMARY KEY(ExperimenterId, ReceiptId),
+    "Description" VARCHAR(256),
+    "Comment" VARCHAR(256), PRIMARY KEY(ExperimenterId, ReceiptId),
     FOREIGN KEY(ReceiptId) REFERENCES Receipt(ReceiptId),
-    FOREIGN KEY(ExperimenterId) REFERENCES Experimenter(NationalId),
+    FOREIGN KEY(ExperimenterId) REFERENCES Experimenter(NationalId)
 );
 
 CREATE TABLE WorkDay(
     EmployeeId NationalIdType NOT NULL,
-    'Day' DayType NOT NULL,
-    'Start' TimeType NOT NULL,
-    'End' TimeType NOT NULL,
+    "Day" DayType NOT NULL,
+    "Start" TimeType NOT NULL,
+    "End" TimeType NOT NULL,
     roomNo INTEGER NOT NULL,
     roomPhoneNumber PhoneNumberType,
-    PRIMARY KEY(EmployeeId, 'Day')
+    PRIMARY KEY(EmployeeId, "Day")
 );
 
 CREATE TABLE PayCheck(
     Id SERIAL NOT NULL PRIMARY KEY,
     EmployeeId NationalIdType NOT NULL,
-    'Date' DateType NOT NULL,
-    Amount CurrencyType NOT NULL,
+    "Date" DateType NOT NULL,
+    Amount CurrencyType NOT NULL
 );
