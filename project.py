@@ -28,6 +28,35 @@ def calculate_work_hours():
     return __convert_to_dict(cursor.fetchall())
 
 
+def __create_person(
+    national_id,
+    fname,
+    lname,
+    gender,
+    bithday,
+    is_married,
+    phonenumber,
+    street,
+    alley,
+    no,
+):
+    cursor.execute(
+        "INSERT INTO Person VALUES(%(national_id)s, %(fname)s, %(lname)s, %(gender)s, %(birthday)s, %(is_married)s, %(phonenumber)s, %(street)s, %(alley)s, %(no)s);",
+        {
+            "national_id": national_id,
+            "fname": fname,
+            "lname": lname,
+            "gender": gender,
+            "birthday": bithday,
+            "is_married": is_married,
+            "phonenumber": phonenumber,
+            "street": street,
+            "alley": alley,
+            "no": no,
+        },
+    )
+
+
 def create_patient(
     national_id,
     fname,
@@ -44,20 +73,23 @@ def create_patient(
     weight,
     height,
 ):
+    __create_person(
+        national_id,
+        fname,
+        lname,
+        gender,
+        bithday,
+        is_married,
+        phonenumber,
+        street,
+        alley,
+        no,
+    )
+    
     cursor.execute(
-        "INSERT INTO Person VALUES(%(national_id)s, %(fname)s, %(lname)s, %(gender)s, %(birthday)s, %(is_married)s, %(phonenumber)s, %(street)s, %(alley)s, %(no)s);"
-        + "INSERT INTO Patient VALUES(%(national_id)s, %(insurance_name)s, %(insurance_exp_date)s , %(weight)s, %(height)s);",
+        "INSERT INTO Patient VALUES(%(national_id)s, %(insurance_name)s, %(insurance_exp_date)s , %(weight)s, %(height)s)",
         {
             "national_id": national_id,
-            "fname": fname,
-            "lname": lname,
-            "gender": gender,
-            "birthday": bithday,
-            "is_married": is_married,
-            "phonenumber": phonenumber,
-            "street": street,
-            "alley": alley,
-            "no": no,
             "insurance_name": insurance_name,
             "insurance_exp_date": insurance_exp_date,
             "weight": weight,
@@ -65,6 +97,86 @@ def create_patient(
         },
     )
 
+    connection.commit()
+
+
+def __create_employee(
+    national_id,
+    fname,
+    lname,
+    gender,
+    bithday,
+    is_married,
+    phonenumber,
+    street,
+    alley,
+    no,
+    contract_start_date,
+    contract_end_date,
+    salary,
+):
+    __create_person(
+        national_id,
+        fname,
+        lname,
+        gender,
+        bithday,
+        is_married,
+        phonenumber,
+        street,
+        alley,
+        no,
+    )
+   
+    cursor.execute(
+        "INSERT INTO Employee VALUES(%(national_id)s, %(contract_start_date)s, %(contract_end_date)s , %(salary)s)",
+        {
+            "contract_start_date": contract_start_date,
+            "contract_end_date": contract_end_date,
+            "salary": salary,
+        },
+    )
+
+
+def create_employee(
+    national_id,
+    fname,
+    lname,
+    gender,
+    bithday,
+    is_married,
+    phonenumber,
+    street,
+    alley,
+    no,
+    contract_start_date,
+    contract_end_date,
+    salary,
+    table_name,
+    gmc_number,
+):
+    __create_employee(
+        national_id,
+        fname,
+        lname,
+        gender,
+        bithday,
+        is_married,
+        phonenumber,
+        street,
+        alley,
+        no,
+        contract_start_date,
+        contract_end_date,
+        salary,
+    )
+    
+    cursor.execute(
+        "INSERT INTO {%(table_name)s} VALUES(%(national_id)s" + ")"
+        if table_name in ["Manager", "Secratary"]
+        else ",%(gmc_number)s)",
+        {"table_name": table_name, "gmc_number": gmc_number},
+    )
     connection.commit()
 
 
@@ -130,4 +242,16 @@ def get_experimenters_patients(experimenter_id, start_date, end_date):
         },
     )
 
+    return __convert_to_dict(cursor.fetchall())
+
+
+def get_patients_Results(patient_id, start_date, end_date, order_by_date):
+    cursor.execute(
+        "SELECT * FROM Result WHERE ExperimentDate > (%(start_date)s) AND ExperimentDate < (%(end_date)s) AND "
+        + "Result.ReceiptId IN (SELECT Receipt.ReceiptId FROM Receipt WHERE PatientId=(%(patient_id)s))"
+        + " ORDER BY ExperimentDate"
+        if order_by_date
+        else "",
+        {"start_date": start_date, "end_date": end_date, "patient_id": patient_id},
+    )
     return __convert_to_dict(cursor.fetchall())

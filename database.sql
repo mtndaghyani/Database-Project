@@ -215,7 +215,8 @@ CREATE TABLE Result(
     SampleId INTEGER NOT NULL,
     ExperimentDate DateType NOT NULL,
     "Description" VARCHAR(256),
-    "Comment" VARCHAR(256), PRIMARY KEY(ExperimenterId, ReceiptId),
+    "Comment" VARCHAR(256),
+    PRIMARY KEY(ExperimenterId, ReceiptId),
     FOREIGN KEY(ReceiptId) REFERENCES Receipt(ReceiptId),
     FOREIGN KEY(ExperimenterId) REFERENCES Experimenter(NationalId)
 );
