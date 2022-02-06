@@ -79,7 +79,7 @@ CREATE TABLE Manager(
     FOREIGN KEY (NationalId) REFERENCES Employee(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE Secratary(
+CREATE TABLE Secretory(
     NationalId NationalIdType NOT NULL PRIMARY KEY,
     FOREIGN KEY (NationalId) REFERENCES Employee(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );

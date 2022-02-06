@@ -241,7 +241,7 @@ def delete_experiment(exp_name):
     connection.commit()
 
 
-def add_prescription(patient_id, refer_doctor, date, experimnets):
+def add_prescription(patient_id, refer_doctor, date, experiments):
     cursor.execute(
         'INSERT INTO Prescription(PatientId, ReferDoctor,"Date") VALUES(%(patient_id)s, %(refer_doctor)s, %(date)s) RETURNING PrescriptionId',
         {"patient_id": patient_id, "refer_doctor": refer_doctor, "date": date},
