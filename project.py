@@ -223,6 +223,24 @@ def add_experiment(exp_name, exp_cost):
     connection.commit()
 
 
+def update_experiment(exp_name, exp_cost):
+    cursor.execute(
+        "UPDATE EXPERIMENT "
+        + "SET ExperimentCost= %(exp_name)s"
+        + "WHERE ExperimentName= %(exp_cost)s",
+        {"exp_name": exp_name, "exp_cost": exp_cost},
+    )
+    connection.commit()
+
+
+def delete_experiment(exp_name):
+    cursor.execute(
+        "DELETE FROM EXPERIMENT WHERE ExperimentName= %(exp_name)s",
+        {"exp_name": exp_name},
+    )
+    connection.commit()
+
+
 def add_prescription(patient_id, refer_doctor, date, experimnets):
     cursor.execute(
         'INSERT INTO Prescription(PatientId, ReferDoctor,"Date") VALUES(%(patient_id)s, %(refer_doctor)s, %(date)s)',
@@ -231,10 +249,12 @@ def add_prescription(patient_id, refer_doctor, date, experimnets):
 
     connection.commit()
 
+
 # TODO implement RelatedTo
 
-# Receipt will be created when a prescription added. 
- 
+# Receipt will be created when a prescription added.
+
+
 def add_sample(patient_id, exp_name, sampler_id):
     cursor.execute(
         'INSERT INTO "Sample"(PatientId, ExperimentName, SamplerId) VALUES(%(patient_id)s, %(exp_name)s, %(sampler_id)s)',
@@ -280,7 +300,6 @@ def add_work_day(employee_id, day, start, end, roomno, room_phonenumber):
         },
     )
     connection.commit()
-    pass
 
 
 def add_pay_check(employee_id, date, amount):
@@ -290,7 +309,9 @@ def add_pay_check(employee_id, date, amount):
     )
     connection.commit()
 
+
 # ---------------------------------------------------------------------------------------------------------------------------
+
 
 def update_person_info(national_id, updates):
     s = ""
@@ -374,3 +395,21 @@ def calculate_work_hours():
         'SELECT EmployeeId, SUM(EXTRACT(HOUR FROM "End") - EXTRACT(HOUR FROM "Start")) AS workHoursInWeek FROM WorkDay GROUP BY EmployeeId'
     )
     return __convert_to_dict(cursor.fetchall())
+
+
+# -----------------------------------
+
+
+def delete_person(national_id):
+    cursor.execute(
+        "DELETE FROM Person WHERE national_id=%(national_id)s",
+        {"national_id": national_id},
+    )
+    connection.commit()
+
+
+def delete_sample(sample_id):
+    cursor.execute(
+        "DELETE FROM SAMPLE WHERE SampleId=%(sample_id)s", {"sample_id": sample_id}
+    )
+    connection.commit()
