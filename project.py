@@ -217,7 +217,7 @@ def add_disease_background(disease_name, patient_id, start_date, end_date):
 
 def add_experiment(exp_name, exp_cost):
     cursor.execute(
-        "INSERT INTO Experiment VALUES(%(exp_name)s, %(exp_const)s)",
+        "INSERT INTO Experiment VALUES(%(exp_name)s, %(exp_cost)s)",
         {"exp_name": exp_name, "exp_cost": exp_cost},
     )
     connection.commit()
@@ -243,14 +243,16 @@ def delete_experiment(exp_name):
 
 def add_prescription(patient_id, refer_doctor, date, experimnets):
     cursor.execute(
-        'INSERT INTO Prescription(PatientId, ReferDoctor,"Date") VALUES(%(patient_id)s, %(refer_doctor)s, %(date)s)',
+        'INSERT INTO Prescription(PatientId, ReferDoctor,"Date") VALUES(%(patient_id)s, %(refer_doctor)s, %(date)s) RETURNING PrescriptionId',
         {"patient_id": patient_id, "refer_doctor": refer_doctor, "date": date},
     )
+    prescription_id = cursor.fetchone()["prescriptionid"]
 
+    values = [(prescription_id, exp) for exp in experimnets]
+    args = ",".join(cursor.mogrify("(%s,%s)", i).decode("utf-8") for i in values)
+    cursor.execute("INSERT INTO RelatedTo VALUES " + (args))
     connection.commit()
 
-
-# TODO implement RelatedTo
 
 # Receipt will be created when a prescription added.
 
@@ -330,7 +332,6 @@ def update_person_info(national_id, updates):
 
 
 def get_person_info(national_id):
-
     cursor.execute(
         "SELECT * FROM Person WHERE NationalId=%(national_id)s",
         {"national_id": national_id},
