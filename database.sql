@@ -85,8 +85,7 @@ CREATE TABLE Secratary(
 );
 
 CREATE TABLE InsuranceCompany(
-    InsuranceId SERIAL NOT NULL PRIMARY KEY,
-    InsuranceName VARCHAR(128) NOT NULL UNIQUE,
+    InsuranceName VARCHAR(128) NOT NULL PRIMARY KEY,
     "Percentage" DECIMAL(4, 2) NOT NULL ,
     "Limit" CurrencyType NOT NULL,
     StartDate DateType NOT NULL,

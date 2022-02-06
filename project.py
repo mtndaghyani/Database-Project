@@ -21,14 +21,7 @@ def __convert_to_dict(selected_rows):
     return rows
 
 
-def calculate_work_hours():
-    cursor.execute(
-        'SELECT EmployeeId, SUM(EXTRACT(HOUR FROM "End") - EXTRACT(HOUR FROM "Start")) AS workHoursInWeek FROM WorkDay GROUP BY EmployeeId'
-    )
-    return __convert_to_dict(cursor.fetchall())
-
-
-def __create_person(
+def __add_person(
     national_id,
     fname,
     lname,
@@ -57,7 +50,45 @@ def __create_person(
     )
 
 
-def create_patient(
+def __add_employee(
+    national_id,
+    fname,
+    lname,
+    gender,
+    bithday,
+    is_married,
+    phonenumber,
+    street,
+    alley,
+    no,
+    contract_start_date,
+    contract_end_date,
+    salary,
+):
+    __add_person(
+        national_id,
+        fname,
+        lname,
+        gender,
+        bithday,
+        is_married,
+        phonenumber,
+        street,
+        alley,
+        no,
+    )
+
+    cursor.execute(
+        "INSERT INTO Employee VALUES(%(national_id)s, %(contract_start_date)s, %(contract_end_date)s , %(salary)s)",
+        {
+            "contract_start_date": contract_start_date,
+            "contract_end_date": contract_end_date,
+            "salary": salary,
+        },
+    )
+
+
+def add_patient(
     national_id,
     fname,
     lname,
@@ -73,7 +104,7 @@ def create_patient(
     weight,
     height,
 ):
-    __create_person(
+    __add_person(
         national_id,
         fname,
         lname,
@@ -85,7 +116,7 @@ def create_patient(
         alley,
         no,
     )
-    
+
     cursor.execute(
         "INSERT INTO Patient VALUES(%(national_id)s, %(insurance_name)s, %(insurance_exp_date)s , %(weight)s, %(height)s)",
         {
@@ -100,45 +131,7 @@ def create_patient(
     connection.commit()
 
 
-def __create_employee(
-    national_id,
-    fname,
-    lname,
-    gender,
-    bithday,
-    is_married,
-    phonenumber,
-    street,
-    alley,
-    no,
-    contract_start_date,
-    contract_end_date,
-    salary,
-):
-    __create_person(
-        national_id,
-        fname,
-        lname,
-        gender,
-        bithday,
-        is_married,
-        phonenumber,
-        street,
-        alley,
-        no,
-    )
-   
-    cursor.execute(
-        "INSERT INTO Employee VALUES(%(national_id)s, %(contract_start_date)s, %(contract_end_date)s , %(salary)s)",
-        {
-            "contract_start_date": contract_start_date,
-            "contract_end_date": contract_end_date,
-            "salary": salary,
-        },
-    )
-
-
-def create_employee(
+def add_employee(
     national_id,
     fname,
     lname,
@@ -155,7 +148,7 @@ def create_employee(
     table_name,
     gmc_number,
 ):
-    __create_employee(
+    __add_employee(
         national_id,
         fname,
         lname,
@@ -170,7 +163,7 @@ def create_employee(
         contract_end_date,
         salary,
     )
-    
+
     cursor.execute(
         "INSERT INTO {%(table_name)s} VALUES(%(national_id)s" + ")"
         if table_name in ["Manager", "Secratary"]
@@ -180,7 +173,126 @@ def create_employee(
     connection.commit()
 
 
-def update_person(national_id, updates):
+def add_insurance_company(insurance_name, percentage, limit, start_date, end_date):
+    cursor.execute(
+        "INSERT INTO InsuranceCompany VALUES(%(insurance_name)s, %(percentage)s, %(limit)s, %(start_date)s, %(end_date)s)",
+        {
+            "insurance_name": insurance_name,
+            "percentage": percentage,
+            "limit": limit,
+            "start_date": start_date,
+            "end_date": end_date,
+        },
+    )
+    connection.commit()
+
+
+def add_education_degree(employee_id, title, university, start_date, end_date):
+    cursor.execute(
+        "INSERT INTO EducationDegree VALUES(%(employee_id)s, %(title)s, %(university)s, %(start_date)s, %(end_date)s)",
+        {
+            "employee_id": employee_id,
+            "title": title,
+            "university": university,
+            "start_date": start_date,
+            "end_date": end_date,
+        },
+    )
+
+    connection.commit()
+
+
+def add_disease_background(disease_name, patient_id, start_date, end_date):
+    cursor.execute(
+        "INSERT INTO DiseaseBackground VALUES(%(disease_name)s, %(patient_id)s, %(start_date)s, %(end_date)s)",
+        {
+            "disease_name": disease_name,
+            "patient_id": patient_id,
+            "start_date": start_date,
+            "end_date": end_date,
+        },
+    )
+    connection.commit()
+
+
+def add_experiment(exp_name, exp_cost):
+    cursor.execute(
+        "INSERT INTO Experiment VALUES(%(exp_name)s, %(exp_const)s)",
+        {"exp_name": exp_name, "exp_cost": exp_cost},
+    )
+    connection.commit()
+
+
+def add_prescription(patient_id, refer_doctor, date, experimnets):
+    cursor.execute(
+        'INSERT INTO Prescription(PatientId, ReferDoctor,"Date") VALUES(%(patient_id)s, %(refer_doctor)s, %(date)s)',
+        {"patient_id": patient_id, "refer_doctor": refer_doctor, "date": date},
+    )
+
+    connection.commit()
+
+# TODO implement RelatedTo
+
+# Receipt will be created when a prescription added. 
+ 
+def add_sample(patient_id, exp_name, sampler_id):
+    cursor.execute(
+        'INSERT INTO "Sample"(PatientId, ExperimentName, SamplerId) VALUES(%(patient_id)s, %(exp_name)s, %(sampler_id)s)',
+        {"patient_id": patient_id, "exp_name": exp_name, "sampler_id": sampler_id},
+    )
+    connection.commit()
+
+
+def add_result(
+    experimenter_id,
+    receipt_id,
+    prescription_id,
+    sample_id,
+    experiment_date,
+    description,
+    comment,
+):
+    cursor.execute(
+        "INSERT INTO Result VALUES(%(experimenter_id)s, %(receipt_id)s, %(prescription_id)s, %(sample_id)s, %(experiment_date)s, %(description)s, %(comment)s)",
+        {
+            "experimenter_id": experimenter_id,
+            "receipt_id": receipt_id,
+            "prescription_id": prescription_id,
+            "sample_id": sample_id,
+            "experiment_date": experiment_date,
+            "description": description,
+            "comment": comment,
+        },
+    )
+    connection.commit()
+
+
+def add_work_day(employee_id, day, start, end, roomno, room_phonenumber):
+    cursor.execute(
+        "INSERT INTO WorkDay VALUES(%(employee_id)s, %(day)s, %(start)s, %(end)s, %(roomno)s, %(room_phonenumber)s)",
+        {
+            "employee_id": employee_id,
+            "day": day,
+            "start": start,
+            "end": end,
+            "roomno": roomno,
+            "room_phonenumber": room_phonenumber,
+        },
+    )
+    connection.commit()
+    pass
+
+
+def add_pay_check(employee_id, date, amount):
+    cursor.execute(
+        'INSERT INTO Paycheck(EmployeeId, "Date", Amount) VALUES(%(employee_id)s, %(date)s, %(amount)s)',
+        {"employee_id": employee_id, "date": date, "amount": amount},
+    )
+    connection.commit()
+
+# ---------------------------------------------------------------------------------------------------------------------------
+
+def update_person_info(national_id, updates):
     s = ""
     for update in updates:
         if type(updates[update]) == str:
@@ -253,5 +365,12 @@ def get_patients_Results(patient_id, start_date, end_date, order_by_date):
         if order_by_date
         else "",
         {"start_date": start_date, "end_date": end_date, "patient_id": patient_id},
+    )
+    return __convert_to_dict(cursor.fetchall())
+
+
+def calculate_work_hours():
+    cursor.execute(
+        'SELECT EmployeeId, SUM(EXTRACT(HOUR FROM "End") - EXTRACT(HOUR FROM "Start")) AS workHoursInWeek FROM WorkDay GROUP BY EmployeeId'
     )
     return __convert_to_dict(cursor.fetchall())
