@@ -187,6 +187,11 @@ def get_employees():
     return __convert_to_dict(cursor.fetchall())
 
 
+def get_insurances():
+    cursor.execute("SELECT * FROM InsuranceCompany")
+    return __convert_to_dict(cursor.fetchall())
+
+
 # ok
 def add_employee(
     national_id,
@@ -262,22 +267,15 @@ def delete_insurance_company(insurance_name):
 
 
 # ok
-def update_insurance_company(insurance_name, **kwargs):
+def update_insurance_company(insurance_name, updates):
+    query = __convert_updates_to_query(updates)
     cursor.execute(
-        "UPDATE InsuranceCompany "
-        + _get_insurance_company_update_sets(**kwargs)
+        "UPDATE InsuranceCompany SET "
+        + query
         + "WHERE InsuranceName = %(insurance_name)s",
         {"insurance_name": insurance_name},
     )
     connection.commit()
-
-
-def _get_insurance_company_update_sets(**kwargs):
-    result = "SET "
-    for (key, value) in kwargs.items():
-        value = value if isinstance(value, int) else f"'{value}'"
-        result += f'"{key}" = {value} ' + ", "
-    return result[:-2]
 
 
 def get_samplers_samples(sampler_id):
@@ -437,11 +435,31 @@ def get_patient_prescriptions(patient_id, start_date, end_date):
 
 def __convert_updates_to_query(updates):
     query = ""
+    case_sensitive_cols = [
+        "Password",
+        "Role",
+        "No",
+        "Weight",
+        "Percentage",
+        "Limit",
+        "Date",
+        "Description",
+        "Comment",
+        "Day",
+        "Start",
+        "End",
+    ]
     for update in updates:
         if type(updates[update]) == str:
-            query += f"\"{update}\"='{updates[update]}',"
+            if update in case_sensitive_cols:
+                query += f"\"{update}\"='{updates[update]}',"
+            else:
+                query += f"{update}='{updates[update]}',"
         else:
-            query += f'"{update}"={updates[update]} ,'
+            if update in case_sensitive_cols:
+                query += f'"{update}"={updates[update]} ,'
+            else:
+                query += f"{update}={updates[update]} ,"
     return query[:-1]
 
 
@@ -466,6 +484,11 @@ def update_patient_info(national_id, updates):
     )
 
     connection.commit()
+
+
+def get_experiments():
+    cursor.execute("SELECT * FROM Experiment")
+    return __convert_to_dict(cursor.fetchall())
 
 
 def get_person_info(national_id):
