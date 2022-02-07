@@ -1,5 +1,7 @@
 -- CREATE DATABASE laboratory;
 
+CREATE EXTENSION pgcrypto;
+
 CREATE DOMAIN NationalIdType AS CHAR(10) CHECK (LENGTH(VALUE) = 10);
 
 CREATE DOMAIN DateType AS TIMESTAMP WITH TIME ZONE;
@@ -25,9 +27,21 @@ CREATE DOMAIN DayType AS VARCHAR(10) CHECK(
     )
 );
 
+CREATE DOMAIN RoleType AS VARCHAR(12) CHECK(
+    VALUE IN (
+        'Manager',
+        'Doctor',
+        'Sampler',
+        'Experimenter',
+        'Patient',
+        'Secretary'
+    )
+);
 
 CREATE TABLE Person(
     NationalId NationalIdType NOT NULL PRIMARY KEY,
+    "Password" TEXT NOT NULL,
+    "Role" RoleType NOT NULL,
     FName VARCHAR(512) NOT NULL,
     LName VARCHAR(512) NOT NULL,
     Gender GenderType NOT NULL,
@@ -119,13 +133,13 @@ CREATE TABLE Experiment(
 
 CREATE TABLE Prescription(
     PrescriptionId SERIAL NOT NULL PRIMARY KEY,
-    PatientId NationalIdType NOT NULL,
+    PatientId NationalIdType,
     ReferDoctor VARCHAR(128) NOT NULL,
     "Date" DateType NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Expenses CurrencyType NOT NULL DEFAULT 0,
     TotalCost CurrencyType NOT NULL DEFAULT 0,
     PreparationDate DateType NOT NULL,
-    FOREIGN KEY(PatientId) REFERENCES Patient(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY(PatientId) REFERENCES Patient(NationalId) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE RelatedTo(
@@ -177,9 +191,7 @@ CREATE TABLE "Sample"(
     SamplerId NationalIdType NOT NULL,
     FOREIGN KEY(PatientId) REFERENCES Patient(NationalId) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY(ExperimentName) REFERENCES Experiment(ExperimentName) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY(SamplerId) REFERENCES Sampler(NationalId) ON DELETE
-    SET
-        NULL ON UPDATE CASCADE
+    FOREIGN KEY(SamplerId) REFERENCES Sampler(NationalId) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE Result(
@@ -189,9 +201,10 @@ CREATE TABLE Result(
     ExperimentDate DateType NOT NULL,
     "Description" VARCHAR(256),
     "Comment" VARCHAR(256),
-    PRIMARY KEY(ExperimenterId, PrescriptionId),
-    FOREIGN KEY(ExperimenterId) REFERENCES Experimenter(NationalId),
-    FOREIGN KEY(PrescriptionId) REFERENCES Prescription(PrescriptionId),
+    PRIMARY KEY(PrescriptionId, SampleId),
+    FOREIGN KEY(ExperimenterId) REFERENCES Experimenter(NationalId) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY(PrescriptionId) REFERENCES Prescription(PrescriptionId) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY(SampleId) REFERENCES "Sample"(SampleId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE WorkDay(
@@ -201,7 +214,8 @@ CREATE TABLE WorkDay(
     "End" TimeType NOT NULL,
     roomNo INTEGER NOT NULL,
     roomPhoneNumber PhoneNumberType,
-    PRIMARY KEY(EmployeeId, "Day")
+    PRIMARY KEY(EmployeeId, "Day"),
+    FOREIGN KEY(EmployeeId) REFERENCES Employee(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE PayCheck(

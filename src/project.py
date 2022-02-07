@@ -2,14 +2,44 @@ import psycopg2
 import psycopg2.extras
 from psycopg2.extensions import AsIs
 
+MANAGER = "Manager"
+SAMPLER = "Sampler"
+EXPERIMENTER = "Experimenter"
+DOCTOR = "Doctor"
+SECRETARY = "Secretary"
+PATIENT = "Patient"
+
 connection = psycopg2.connect(
     dbname="laboratory",
-    password="MAT5268in",
-    user="postgres",
+    user="mohamadamin",
+    password="1234",
     host="localhost",
     port=5432,
 )
 cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+
+def login(national_id, password):
+
+    cursor.execute(
+        'SELECT NationalId, "Role" FROM Person WHERE NationalId=%(national_id)s AND "Password"=crypt(%(password)s, "Password")',
+        {"national_id": national_id, "password": password},
+    ),
+
+    user = cursor.fetchone()
+    if user:
+        return {
+            "is_authenticated": True,
+            "national_id": user["nationalid"],
+            "role": user["Role"],
+        }
+
+    else:
+        return {"is_authenticated": False, "national_id": None, "role": None}
+
+
+def logout():
+    return {"is_authenticated": False, "national_id": None, "role": None}
 
 
 # ok
@@ -25,21 +55,25 @@ def __convert_to_dict(selected_rows):
 
 # ok
 def __add_person(
-        national_id,
-        fname,
-        lname,
-        gender,
-        bithday,
-        is_married,
-        phonenumber,
-        street,
-        alley,
-        no,
+    national_id,
+    password,
+    role,
+    fname,
+    lname,
+    gender,
+    bithday,
+    is_married,
+    phonenumber,
+    street,
+    alley,
+    no,
 ):
     cursor.execute(
-        "INSERT INTO Person VALUES(%(national_id)s, %(fname)s, %(lname)s, %(gender)s, %(birthday)s, %(is_married)s, %(phonenumber)s, %(street)s, %(alley)s, %(no)s);",
+        "INSERT INTO Person VALUES(%(national_id)s, crypt(%(password)s, gen_salt('bf')),(%(role)s), %(fname)s, %(lname)s, %(gender)s, %(birthday)s, %(is_married)s, %(phonenumber)s, %(street)s, %(alley)s, %(no)s);",
         {
             "national_id": national_id,
+            "password": password,
+            "role": role,
             "fname": fname,
             "lname": lname,
             "gender": gender,
@@ -55,22 +89,26 @@ def __add_person(
 
 # ok
 def __add_employee(
-        national_id,
-        fname,
-        lname,
-        gender,
-        bithday,
-        is_married,
-        phonenumber,
-        street,
-        alley,
-        no,
-        contract_start_date,
-        contract_end_date,
-        salary,
+    national_id,
+    password,
+    role,
+    fname,
+    lname,
+    gender,
+    bithday,
+    is_married,
+    phonenumber,
+    street,
+    alley,
+    no,
+    contract_start_date,
+    contract_end_date,
+    salary,
 ):
     __add_person(
         national_id,
+        password,
+        role,
         fname,
         lname,
         gender,
@@ -95,23 +133,27 @@ def __add_employee(
 
 # ok
 def add_patient(
-        national_id,
-        fname,
-        lname,
-        gender,
-        bithday,
-        is_married,
-        phonenumber,
-        street,
-        alley,
-        no,
-        insurance_name,
-        insurance_exp_date,
-        weight,
-        height,
+    national_id,
+    password,
+    role,
+    fname,
+    lname,
+    gender,
+    bithday,
+    is_married,
+    phonenumber,
+    street,
+    alley,
+    no,
+    insurance_name,
+    insurance_exp_date,
+    weight,
+    height,
 ):
     __add_person(
         national_id,
+        password,
+        role,
         fname,
         lname,
         gender,
@@ -139,24 +181,28 @@ def add_patient(
 
 # ok
 def add_employee(
-        national_id,
-        fname,
-        lname,
-        gender,
-        bithday,
-        is_married,
-        phonenumber,
-        street,
-        alley,
-        no,
-        contract_start_date,
-        contract_end_date,
-        salary,
-        table_name,
-        gmc_number,
+    national_id,
+    password,
+    role,
+    fname,
+    lname,
+    gender,
+    bithday,
+    is_married,
+    phonenumber,
+    street,
+    alley,
+    no,
+    contract_start_date,
+    contract_end_date,
+    salary,
+    table_name,
+    gmc_number,
 ):
     __add_employee(
         national_id,
+        password,
+        role,
         fname,
         lname,
         gender,
@@ -173,7 +219,7 @@ def add_employee(
 
     cursor.execute(
         "INSERT INTO %(table_name)s VALUES(%(national_id)s"
-        + (")" if table_name in ["Manager", "Secretary"] else ",%(gmc_number)s)"),
+        + (")" if table_name in [MANAGER, SECRETARY] else ",%(gmc_number)s)"),
         {
             "table_name": AsIs(table_name),
             "national_id": national_id,
@@ -219,10 +265,10 @@ def update_insurance_company(insurance_name, **kwargs):
 
 
 def _get_insurance_company_update_sets(**kwargs):
-    result = 'SET '
+    result = "SET "
     for (key, value) in kwargs.items():
-        value = value if isinstance(value, int) else f'\'{value}\''
-        result += f'"{key}" = {value} ' + ', '
+        value = value if isinstance(value, int) else f"'{value}'"
+        result += f'"{key}" = {value} ' + ", "
     return result[:-2]
 
 
@@ -315,12 +361,12 @@ def add_sample(patient_id, exp_name, sampler_id):
 
 # ok
 def add_result(
-        experimenter_id,
-        prescription_id,
-        sample_id,
-        experiment_date,
-        description,
-        comment,
+    experimenter_id,
+    prescription_id,
+    sample_id,
+    experiment_date,
+    description,
+    comment,
 ):
     cursor.execute(
         "INSERT INTO Result VALUES(%(experimenter_id)s, %(prescription_id)s, %(sample_id)s, %(experiment_date)s, %(description)s, %(comment)s)",
@@ -380,7 +426,7 @@ def update_person_info(national_id, updates):
         if type(updates[update]) == str:
             s += f"\"{update}\"='{updates[update]}',"
         else:
-            s += f"\"{update}\"={updates[update]} ,"
+            s += f'"{update}"={updates[update]} ,'
 
     cursor.execute(
         "UPDATE Person SET " + s[:-1] + "WHERE NationalId = %(national_id)s",
@@ -402,7 +448,7 @@ def get_person_info(national_id):
 # ok
 def get_experimenter_results(experimenter_id, start_date, end_date):
     cursor.execute(
-        "SELECT * FROM Result WHERE ExperimenterId=(%(experimenter_id)s) AND ExperimentDate > (%(start_date)s) AND ExperimentDate < (%(end_date)s)",
+        "SELECT * FROM Result WHERE ExperimenterId=(%(experimenter_id)s) AND ExperimentDate >= (%(start_date)s) AND ExperimentDate < (%(end_date)s)",
         {
             "experimenter_id": experimenter_id,
             "start_date": start_date,
@@ -418,7 +464,7 @@ def get_experimenters_patients(experimenter_id, start_date, end_date):
     cursor.execute(
         "SELECT * FROM Patient INNER JOIN Person ON Patient.NationalId=Person.NationalId WHERE Patient.NationalId IN "
         + "(SELECT PatientId FROM Prescription WHERE PrescriptionId IN "
-        + "(SELECT PrescriptionId FROM Result WHERE ExperimenterId=(%(experimenter_id)s) AND ExperimentDate > (%(start_date)s) AND ExperimentDate < (%(end_date)s)))",
+        + "(SELECT PrescriptionId FROM Result WHERE ExperimenterId=(%(experimenter_id)s) AND ExperimentDate >= (%(start_date)s) AND ExperimentDate < (%(end_date)s)))",
         {
             "experimenter_id": experimenter_id,
             "start_date": start_date,
@@ -432,7 +478,7 @@ def get_experimenters_patients(experimenter_id, start_date, end_date):
 # ok
 def calculate_income(start_date, end_date):
     cursor.execute(
-        "SELECT SUM(Expenses) AS Expenses, SUM(TotalCost) AS TotalCosts FROM Prescription WHERE PreparationDate > (%(start_date)s) AND PreparationDate <= (%(end_date)s)",
+        "SELECT SUM(Expenses) AS Expenses, SUM(TotalCost) AS TotalCosts FROM Prescription WHERE PreparationDate >= (%(start_date)s) AND PreparationDate < (%(end_date)s)",
         {
             "start_date": start_date,
             "end_date": end_date,
@@ -445,7 +491,7 @@ def calculate_income(start_date, end_date):
 # ok
 def calculate_paid_salaries(start_date, end_date):
     cursor.execute(
-        'SELECT SUM(Amount) AS Amount FROM Paycheck WHERE "Date" > (%(start_date)s) AND "Date"<= (%(end_date)s)',
+        'SELECT SUM(Amount) AS Amount FROM Paycheck WHERE "Date" >= (%(start_date)s) AND "Date"< (%(end_date)s)',
         {
             "start_date": start_date,
             "end_date": end_date,
@@ -457,11 +503,9 @@ def calculate_paid_salaries(start_date, end_date):
 
 def get_patients_Results(patient_id, start_date, end_date, order_by_date):
     cursor.execute(
-        "SELECT * FROM Result WHERE ExperimentDate > (%(start_date)s) AND ExperimentDate < (%(end_date)s) AND "
+        "SELECT * FROM Result WHERE ExperimentDate >= (%(start_date)s) AND ExperimentDate < (%(end_date)s) AND "
         + "Result.ReceiptId IN (SELECT Receipt.ReceiptId FROM Receipt WHERE PatientId=(%(patient_id)s))"
-        + " ORDER BY ExperimentDate"
-        if order_by_date
-        else "",
+        + (" ORDER BY ExperimentDate" if order_by_date else ""),
         {"start_date": start_date, "end_date": end_date, "patient_id": patient_id},
     )
     return __convert_to_dict(cursor.fetchall())
@@ -491,8 +535,3 @@ def delete_sample(sample_id):
         "DELETE FROM SAMPLE WHERE SampleId=%(sample_id)s", {"sample_id": sample_id}
     )
     connection.commit()
-
-
-if __name__ == '__main__':
-    add_employee("1515151515", "farid", "faridi", "M", "2000-2-21", False, "09122222222", "s2", "a2", 2,
-                 "2021-1-1", "2022-1-1", 1200000, "Doctor", 45312)
