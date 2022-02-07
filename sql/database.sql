@@ -188,7 +188,7 @@ CREATE TABLE "Sample"(
     SampleId SERIAL NOT NULL PRIMARY KEY,
     PatientId NationalIdType NOT NULL,
     ExperimentName VARCHAR(128) NOT NULL,
-    SamplerId NationalIdType NOT NULL,
+    SamplerId NationalIdType,
     FOREIGN KEY(PatientId) REFERENCES Patient(NationalId) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY(ExperimentName) REFERENCES Experiment(ExperimentName) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY(SamplerId) REFERENCES Sampler(NationalId) ON DELETE SET NULL ON UPDATE CASCADE

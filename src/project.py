@@ -179,6 +179,14 @@ def add_patient(
     connection.commit()
 
 
+def get_employees():
+    cursor.execute(
+        "SELECT * FROM Employee INNER JOIN Person ON Employee.NationalId=Person.NationalId"
+    )
+
+    return __convert_to_dict(cursor.fetchall())
+
+
 # ok
 def add_employee(
     national_id,

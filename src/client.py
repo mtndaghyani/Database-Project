@@ -1,5 +1,6 @@
 from project import *
 from termcolor import colored
+from pprint import pprint
 
 user_state = {"is_authenticated": False, "national_id": None, "role": None}
 
@@ -163,18 +164,21 @@ while True:
             option = get_option_input()
             if option == 0:
                 user_state = logout()
-                pass
 
             elif option == 1:
                 while True:
                     print_menu(
-                        "1.Add Employee\n2.Remove Employee\n3.Show Work Hours Of Employees\n0.Back"
+                        "1.Show All Employees\n2.Add Employee\n3.Delete Employee\n4.Show Work Hours Of Employees\n0.Back"
                     )
                     opt = get_option_input()
+                    # Back
                     if opt == 0:
                         break
-
+                    # Show All Employees
                     elif opt == 1:
+                        pprint(get_employees())
+                    # Add Employee
+                    elif opt == 2:
                         [
                             national_id,
                             password,
@@ -217,17 +221,16 @@ while True:
                             gmc_number,
                         )
                         print_success_message("Employee Created Succesfully.")
-
-                    elif opt == 2:
+                    # Delete Employee
+                    elif opt == 3:
                         national_id = input_with_description("Employee's National Id: ")
                         delete_person(national_id)
                         print_success_message(
                             f"Employee With National Id {national_id} Deleted Succesfully."
                         )
-
-                    elif opt == 3:
+                    # Show Work Hours
+                    elif opt == 4:
                         print(calculate_work_hours())
-
                     else:
                         show_wrong_option_number_message()
                 pass
