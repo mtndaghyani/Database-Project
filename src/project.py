@@ -448,7 +448,7 @@ def get_person_info(national_id):
 # ok
 def get_experimenter_results(experimenter_id, start_date, end_date):
     cursor.execute(
-        "SELECT * FROM Result WHERE ExperimenterId=(%(experimenter_id)s) AND ExperimentDate > (%(start_date)s) AND ExperimentDate < (%(end_date)s)",
+        "SELECT * FROM Result WHERE ExperimenterId=(%(experimenter_id)s) AND ExperimentDate >= (%(start_date)s) AND ExperimentDate < (%(end_date)s)",
         {
             "experimenter_id": experimenter_id,
             "start_date": start_date,
@@ -464,7 +464,7 @@ def get_experimenters_patients(experimenter_id, start_date, end_date):
     cursor.execute(
         "SELECT * FROM Patient INNER JOIN Person ON Patient.NationalId=Person.NationalId WHERE Patient.NationalId IN "
         + "(SELECT PatientId FROM Prescription WHERE PrescriptionId IN "
-        + "(SELECT PrescriptionId FROM Result WHERE ExperimenterId=(%(experimenter_id)s) AND ExperimentDate > (%(start_date)s) AND ExperimentDate < (%(end_date)s)))",
+        + "(SELECT PrescriptionId FROM Result WHERE ExperimenterId=(%(experimenter_id)s) AND ExperimentDate >= (%(start_date)s) AND ExperimentDate < (%(end_date)s)))",
         {
             "experimenter_id": experimenter_id,
             "start_date": start_date,
@@ -478,7 +478,7 @@ def get_experimenters_patients(experimenter_id, start_date, end_date):
 # ok
 def calculate_income(start_date, end_date):
     cursor.execute(
-        "SELECT SUM(Expenses) AS Expenses, SUM(TotalCost) AS TotalCosts FROM Prescription WHERE PreparationDate > (%(start_date)s) AND PreparationDate <= (%(end_date)s)",
+        "SELECT SUM(Expenses) AS Expenses, SUM(TotalCost) AS TotalCosts FROM Prescription WHERE PreparationDate >= (%(start_date)s) AND PreparationDate < (%(end_date)s)",
         {
             "start_date": start_date,
             "end_date": end_date,
@@ -491,7 +491,7 @@ def calculate_income(start_date, end_date):
 # ok
 def calculate_paid_salaries(start_date, end_date):
     cursor.execute(
-        'SELECT SUM(Amount) AS Amount FROM Paycheck WHERE "Date" > (%(start_date)s) AND "Date"<= (%(end_date)s)',
+        'SELECT SUM(Amount) AS Amount FROM Paycheck WHERE "Date" >= (%(start_date)s) AND "Date"< (%(end_date)s)',
         {
             "start_date": start_date,
             "end_date": end_date,
@@ -503,11 +503,9 @@ def calculate_paid_salaries(start_date, end_date):
 
 def get_patients_Results(patient_id, start_date, end_date, order_by_date):
     cursor.execute(
-        "SELECT * FROM Result WHERE ExperimentDate > (%(start_date)s) AND ExperimentDate < (%(end_date)s) AND "
+        "SELECT * FROM Result WHERE ExperimentDate >= (%(start_date)s) AND ExperimentDate < (%(end_date)s) AND "
         + "Result.ReceiptId IN (SELECT Receipt.ReceiptId FROM Receipt WHERE PatientId=(%(patient_id)s))"
-        + " ORDER BY ExperimentDate"
-        if order_by_date
-        else "",
+        + (" ORDER BY ExperimentDate" if order_by_date else ""),
         {"start_date": start_date, "end_date": end_date, "patient_id": patient_id},
     )
     return __convert_to_dict(cursor.fetchall())
