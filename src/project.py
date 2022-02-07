@@ -272,6 +272,15 @@ def _get_insurance_company_update_sets(**kwargs):
     return result[:-2]
 
 
+def get_samplers_samples(sampler_id):
+    cursor.execute(
+        "SELECT * FROM Sample WHERE SamplerId=%(sampler_id)s",
+        {"sampler_id": sampler_id},
+    )
+
+    return __convert_to_dict(cursor.fetchall())
+
+
 # ok
 def add_education_degree(employee_id, title, university, start_date, end_date):
     cursor.execute(
@@ -312,12 +321,11 @@ def add_experiment(exp_name, exp_cost):
 
 
 # ok
-def update_experiment(exp_name, exp_cost):
+def update_experiment(exp_name, updates):
+    query = __convert_updates_to_query(updates)
     cursor.execute(
-        "UPDATE EXPERIMENT "
-        + "SET ExperimentCost= %(exp_cost)s"
-        + "WHERE ExperimentName= %(exp_name)s",
-        {"exp_name": exp_name, "exp_cost": exp_cost},
+        "UPDATE EXPERIMENT SET " + query + " WHERE ExperimentName= %(exp_name)s",
+        {"exp_name": exp_name},
     )
     connection.commit()
 
@@ -419,17 +427,33 @@ def get_patient_prescriptions(patient_id, start_date, end_date):
     return __convert_to_dict(cursor.fetchall())
 
 
-# ok
-def update_person_info(national_id, updates):
-    s = ""
+def __convert_updates_to_query(updates):
+    query = ""
     for update in updates:
         if type(updates[update]) == str:
-            s += f"\"{update}\"='{updates[update]}',"
+            query += f"\"{update}\"='{updates[update]}',"
         else:
-            s += f'"{update}"={updates[update]} ,'
+            query += f'"{update}"={updates[update]} ,'
+    return query[:-1]
+
+
+# ok
+def update_person_info(national_id, updates):
+    query = __convert_updates_to_query(updates)
 
     cursor.execute(
-        "UPDATE Person SET " + s[:-1] + "WHERE NationalId = %(national_id)s",
+        "UPDATE Person SET " + query + " WHERE NationalId = %(national_id)s",
+        {"national_id": national_id},
+    )
+
+    connection.commit()
+
+
+def update_patient_info(national_id, updates):
+    query = __convert_updates_to_query(updates)
+
+    cursor.execute(
+        "UPDATE Patinet SET " + query + "WHERE NationalId = %(national_id)s",
         {"national_id": national_id},
     )
 
@@ -504,7 +528,7 @@ def calculate_paid_salaries(start_date, end_date):
 def get_patients_Results(patient_id, start_date, end_date, order_by_date):
     cursor.execute(
         "SELECT * FROM Result WHERE ExperimentDate >= (%(start_date)s) AND ExperimentDate < (%(end_date)s) AND "
-        + "Result.ReceiptId IN (SELECT Receipt.ReceiptId FROM Receipt WHERE PatientId=(%(patient_id)s))"
+        + "Result.PrescriptionId IN (SELECT Prescription.PrescriptionId FROM Prescription WHERE PatientId=(%(patient_id)s))"
         + (" ORDER BY ExperimentDate" if order_by_date else ""),
         {"start_date": start_date, "end_date": end_date, "patient_id": patient_id},
     )
@@ -515,6 +539,14 @@ def get_patients_Results(patient_id, start_date, end_date, order_by_date):
 def calculate_work_hours():
     cursor.execute(
         'SELECT EmployeeId, SUM(EXTRACT(HOUR FROM "End") - EXTRACT(HOUR FROM "Start")) AS workHoursInWeek FROM WorkDay GROUP BY EmployeeId'
+    )
+    return __convert_to_dict(cursor.fetchall())
+
+
+def get_patient_info(national_id):
+    cursor.execute(
+        "SELECT * FROM Patient INNER JOIN Person ON Patient.NationalId=Person.NationalId WHERE Patient.NationalId=%(national_id)s",
+        {"national_id": national_id},
     )
     return __convert_to_dict(cursor.fetchall())
 
@@ -535,6 +567,7 @@ def delete_sample(sample_id):
         "DELETE FROM SAMPLE WHERE SampleId=%(sample_id)s", {"sample_id": sample_id}
     )
     connection.commit()
+
 
 # Manager Is needed To start The Project
 if __name__ == "__main__":
