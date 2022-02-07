@@ -1,5 +1,5 @@
-from src.project import *
-# from project import *
+# from src.project import *
+from project import *
 from termcolor import colored
 from pprint import pprint
 
@@ -362,7 +362,7 @@ while True:
                 user_state = logout()
 
             elif option == 1:
-                print(get_samplers_samples(user_id))
+                pprint(get_samplers_samples(user_id))
 
             elif option == 2:
                 patient_id = input_with_description("Patient's National Id: ")
@@ -388,7 +388,7 @@ while True:
             elif option == 1:
                 [start_date, end_date] = __get_start_and_end_date()
 
-                print(get_experimenter_results(user_id, start_date, end_date))
+                pprint(get_experimenter_results(user_id, start_date, end_date))
 
             elif option == 2:
                 [start_date, end_date] = __get_start_and_end_date()
@@ -408,7 +408,7 @@ while True:
 
             elif option == 1:
                 id = input_with_description("Patient's National Id: ")
-                print(get_patient_info(id)[0])
+                pprint(get_patient_info(id)[0])
                 pass
 
             elif option == 2:
@@ -489,7 +489,7 @@ while True:
                 user_state = logout()
             elif option == 1:
                 [start_date, end_date] = __get_start_and_end_date()
-                print(get_patient_prescriptions(user_id, start_date, end_date))
+                pprint(get_patient_prescriptions(user_id, start_date, end_date))
             elif option == 2:
                 update_person_info(user_id, {})
                 print_success_message("Information Has Been Changed Successfully.")
@@ -498,7 +498,7 @@ while True:
                 order_by = (
                     input_with_description("Order By Experiment Date?(Y, N)") == "Y"
                 )
-                print(get_patients_Results(user_id, start_date, end_date, order_by))
+                pprint(get_patients_Results(user_id, start_date, end_date, order_by))
             else:
                 show_wrong_option_number_message()
             pass

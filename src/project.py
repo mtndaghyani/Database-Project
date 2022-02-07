@@ -280,7 +280,7 @@ def update_insurance_company(insurance_name, updates):
 
 def get_samplers_samples(sampler_id):
     cursor.execute(
-        "SELECT * FROM Sample WHERE SamplerId=%(sampler_id)s",
+        'SELECT * FROM "Sample" WHERE SamplerId=%(sampler_id)s',
         {"sampler_id": sampler_id},
     )
 
