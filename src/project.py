@@ -479,7 +479,7 @@ def update_patient_info(national_id, updates):
     query = __convert_updates_to_query(updates)
 
     cursor.execute(
-        "UPDATE Patinet SET " + query + "WHERE NationalId = %(national_id)s",
+        "UPDATE Patient SET " + query + "WHERE NationalId = %(national_id)s",
         {"national_id": national_id},
     )
 
@@ -511,6 +511,13 @@ def get_experimenter_results(experimenter_id, start_date, end_date):
         },
     )
 
+    return __convert_to_dict(cursor.fetchall())
+
+
+def get_patients():
+    cursor.execute(
+        "SELECT * FROM Patient INNER JOIN Person ON Patient.NationalId=Person.NationalId",
+    )
     return __convert_to_dict(cursor.fetchall())
 
 

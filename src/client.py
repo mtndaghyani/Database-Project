@@ -67,7 +67,13 @@ def __get_employee_info_from_input(role):
         if role not in [MANAGER, SECRETARY]
         else None
     )
-    return [con_start_date, con_end_date, salary, gmc_number]
+
+    return {
+        "ContractStartDate": con_start_date,
+        "ContractEndDate": con_end_date,
+        "Salary": salary,
+        "GMCNumber": gmc_number,
+    }
 
 
 def __get_experiment_info_from_input():
@@ -90,6 +96,7 @@ def __get_person_info_from_input(ask_role):
     street = input_with_description("Street: ")
     alley = input_with_description("Alley: ")
     no = input_with_description("No.: ")
+    no = int(no) if __is_not_null(no) else None
 
     return {
         "NationalId": national_id,
@@ -110,9 +117,17 @@ def __get_person_info_from_input(ask_role):
 def __get_patient_info_from_input():
     insurance_name = input_with_description("Insurance Name: ")
     insurance_exp_date = input_with_description("Insurance Expiration Date: ")
-    weight = float(input_with_description("Weigth: "))
-    height = float(input_with_description("height: "))
-    return [insurance_name, insurance_exp_date, weight, height]
+    weight = input_with_description("Weigth: ")
+    weight = float(weight) if __is_not_null(weight) else None
+    height = input_with_description("height: ")
+    height = float(height) if __is_not_null(height) else None
+
+    return {
+        "InsuranceName": insurance_name,
+        "InsuranceExpirationDate": insurance_exp_date,
+        "Weight": weight,
+        "Height": height,
+    }
 
 
 def __is_not_null(value):
@@ -197,14 +212,14 @@ while True:
                             street,
                             alley,
                             no,
-                        ] = __get_person_info_from_input(True)
+                        ] = __get_person_info_from_input(True).values()
 
                         [
                             con_start_date,
                             con_end_date,
                             salary,
                             gmc_number,
-                        ] = __get_employee_info_from_input(role)
+                        ] = __get_employee_info_from_input(role).values()
 
                         add_employee(
                             national_id,
@@ -392,26 +407,29 @@ while True:
 
             elif option == 2:
                 [start_date, end_date] = __get_start_and_end_date()
-                get_experimenters_patients(user_id, start_date, end_date)
+                pprint(get_experimenters_patients(user_id, start_date, end_date))
             else:
                 show_wrong_option_number_message()
 
         elif role == SECRETARY:
             print_menu(
-                "1.Get Patient's Information\n2.Add New Patient\n3.Change Patient's Information\n4.Delete A Patient\n0.Logout"
+                "1.Patient List\n2.Get Patient's Information\n3.Add New Patient\n4.Change Patient's Information\n5.Delete A Patient\n0.Logout"
             )
             option = get_option_input()
 
             if option == 0:
                 user_state = logout()
                 pass
-
+            # list of patients
             elif option == 1:
+                pprint(get_patients())
+            # one Patient
+            elif option == 2:
                 id = input_with_description("Patient's National Id: ")
                 pprint(get_patient_info(id)[0])
                 pass
-
-            elif option == 2:
+            # Add patient
+            elif option == 3:
                 [
                     national_id,
                     password,
@@ -425,14 +443,14 @@ while True:
                     street,
                     alley,
                     no,
-                ] = __get_person_info_from_input(False)
+                ] = __get_person_info_from_input(False).values()
 
                 [
                     insurance_name,
                     insurance_exp_date,
                     weight,
                     height,
-                ] = __get_patient_info_from_input()
+                ] = __get_patient_info_from_input().values()
 
                 add_patient(
                     national_id,
@@ -454,8 +472,8 @@ while True:
                 )
                 print_success_message("Patient Has Been Added Succussfully.")
                 pass
-
-            elif option == 3:
+            # Change Patient
+            elif option == 4:
                 id = input_with_description("Patient's National Id: ")
                 print_description(
                     "Only Fill In Fields You Need To Change (Leave Others Blank)"
@@ -471,9 +489,9 @@ while True:
                 )
 
                 update_patient_info(id, patient_updates)
-
-            elif option == 4:
-                id = input_with_description("Patient's National Id")
+            # Delete patient
+            elif option == 5:
+                id = input_with_description("Patient's National Id: ")
                 delete_person(id)
                 print_success_message("Patient Has Been Deleted Succussfully.")
 
