@@ -77,8 +77,9 @@ def __get_experiment_info_from_input():
     return {"ExperimentName": exp_name, "ExperimentCost": exp_cost}
 
 
-def __get_person_info_from_input(ask_role):
-    national_id = input_with_description("National Id: ")
+def __get_person_info_from_input(ask_role, national_id=None):
+    if not national_id:
+        national_id = input_with_description("National Id: ")
     password = input_with_description("Password: ")
     role = get_role() if ask_role else None
     fname = input_with_description("First Name: ")
@@ -491,7 +492,14 @@ while True:
                 [start_date, end_date] = __get_start_and_end_date()
                 pprint(get_patient_prescriptions(user_id, start_date, end_date))
             elif option == 2:
-                update_person_info(user_id, {})
+                print_description(
+                    "Only Fill In Fields You Need To Change (Leave Others Blank)"
+                )
+                persons_updates = __get_fixed_update_fields(
+                    __get_person_info_from_input(False, user_id)
+                )
+
+                update_person_info(user_id, persons_updates)
                 print_success_message("Information Has Been Changed Successfully.")
             elif option == 3:
                 [start_date, end_date] = __get_start_and_end_date()
