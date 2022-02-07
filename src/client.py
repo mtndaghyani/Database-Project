@@ -372,7 +372,7 @@ while True:
 
             elif option == 3:
                 id = input_with_description("Sample Id: ")
-                delete_sample(id)
+                delete_sample(id, user_id)
                 print_success_message("Sample Has Been Deleted Succussfully.")
 
             else:

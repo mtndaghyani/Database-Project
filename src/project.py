@@ -593,9 +593,10 @@ def delete_person(national_id):
     connection.commit()
 
 
-def delete_sample(sample_id):
+def delete_sample(sample_id, sampler_id):
     cursor.execute(
-        "DELETE FROM SAMPLE WHERE SampleId=%(sample_id)s", {"sample_id": sample_id}
+        'DELETE FROM "Sample" WHERE SampleId=%(sample_id)s AND SamplerId=%(sampler_id)s',
+        {"sample_id": sample_id, "sampler_id": sampler_id},
     )
     connection.commit()
 
