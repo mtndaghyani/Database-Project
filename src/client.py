@@ -501,7 +501,7 @@ while True:
 
         elif role == PATIENT:
             print_menu(
-                "1.Get Prescriptions\n2.Change Information\n3.Get Results\n0.Logout"
+                "1.Get Prescriptions\n2.Change Information\n3.Get Results\n4.Get Information\n0.Logout"
             )
             option = get_option_input()
             if option == 0:
@@ -525,6 +525,9 @@ while True:
                     input_with_description("Order By Experiment Date?(Y, N)") == "Y"
                 )
                 pprint(get_patients_Results(user_id, start_date, end_date, order_by))
+
+            elif option == 4:
+                pprint(get_patient_info(user_id)[0])
             else:
                 show_wrong_option_number_message()
             pass

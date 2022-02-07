@@ -452,7 +452,12 @@ def __convert_updates_to_query(updates):
     for update in updates:
         if type(updates[update]) == str:
             if update in case_sensitive_cols:
-                query += f"\"{update}\"='{updates[update]}',"
+                if update == "Password":
+                    query += (
+                        f"\"{update}\"=crypt('{updates[update]}',  gen_salt('bf')),"
+                    )
+                else:
+                    query += f"\"{update}\"='{updates[update]}',"
             else:
                 query += f"{update}='{updates[update]}',"
         else:
