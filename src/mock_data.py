@@ -1,4 +1,4 @@
-from project import *
+from src.project import *
 
 # add employees
 
@@ -336,7 +336,7 @@ add_prescription(
 add_prescription(
     "9999999999", "noskhe3", "2020-01-01", "2022-01-10", ["madfo", "khon", "checkUP"]
 )
-add_prescription("1010101010", "noskhe4", "2019-02-01", "2019-01-05", ["edrar"])
+add_prescription("1010101010", "noskhe4", "2019-01-01", "2019-01-05", ["edrar"])
 add_prescription("1010101010", "noskhe5", "2019-03-01", "2019-03-15", ["Pregnancy"])
 add_prescription(
     "1212121212",
@@ -408,4 +408,30 @@ add_pay_check("0909090909", "2021-3-10", 98000)
 
 
 # results
-add_result("4444444444", 1, 1, "2021-2-2", "des", "comm")
+add_result("4444444444", 1, 1, "2021-1-11", "des", "comm1")
+add_result("1234567890", 1, 2, "2021-1-12", "des", "comm2")
+add_result("4444444444", 2, 7, "2021-1-20", "asdf", "comm3")
+add_result("1234567890", 2, 9, "2021-2-2", "hhhh", "comm4")
+add_result("4444444444", 3, 11, "2021-2-3", "eqtr", "comm5")
+add_result("1234567890", 3, 12, "2021-3-10", "des", "comm6")
+add_result("4444444444", 3, 13, "2021-2-26", "cc", "comm7")
+add_result("1234567890", 4, 4, "2021-1-2", "af", "comm8")
+add_result("4444444444", 4, 5, "2021-1-4", "qrawer", "comm9")
+add_result("1234567890", 4, 6, "2021-1-3", "asdfasdf", "comm11")
+add_result("4444444444", 5, 14, "2021-1-2", "aarehserh", "comm12")
+add_result("1234567890", 5, 15, "2021-1-9", "gawr", "comm13")
+add_result("4444444444", 5, 16, "2021-1-8", "asdf", "comm14")
+add_result("1234567890", 6, 17, "2021-1-4", "ytdu", "comm15")
+add_result("4444444444", 7, 18, "2021-3-14", "rtyusery", "comm16")
+add_result("1234567890", 8, 19, "2021-3-12", "adsfaw", "comm17")
+add_result("4444444444", 8, 20, "2021-3-14", "xcgart", "com18")
+add_result("1234567890", 8, 21, "2021-3-20", "aeraedsf", "com19")
+add_result("4444444444", 8, 22, "2021-3-2", "asgeaet", "com20")
+add_result("1234567890", 9, 23, "2021-2-28", "aefadsf", "comm22")
+add_result("4444444444", 10, 24, "2021-9-5", "aeqwr", "comm23")
+add_result("1234567890", 10, 25, "2021-9-9", "adsgare", "comm24")
+add_result("1234567890", 11, 10, "2021-1-5", "asd", "comm234")
+add_result("1234567890", 11, 8, "2021-1-8", "asdfsadf", "comm44")
+
+
+
