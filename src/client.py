@@ -1,4 +1,4 @@
-from project import *
+from src.project import *
 from termcolor import colored
 from pprint import pprint
 
