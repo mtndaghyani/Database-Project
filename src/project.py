@@ -452,7 +452,12 @@ def __convert_updates_to_query(updates):
     for update in updates:
         if type(updates[update]) == str:
             if update in case_sensitive_cols:
-                query += f"\"{update}\"='{updates[update]}',"
+                if update == "Password":
+                    query += (
+                        f"\"{update}\"=crypt('{updates[update]}',  gen_salt('bf')),"
+                    )
+                else:
+                    query += f"\"{update}\"='{updates[update]}',"
             else:
                 query += f"{update}='{updates[update]}',"
         else:
@@ -479,7 +484,7 @@ def update_patient_info(national_id, updates):
     query = __convert_updates_to_query(updates)
 
     cursor.execute(
-        "UPDATE Patinet SET " + query + "WHERE NationalId = %(national_id)s",
+        "UPDATE Patient SET " + query + "WHERE NationalId = %(national_id)s",
         {"national_id": national_id},
     )
 
@@ -511,6 +516,13 @@ def get_experimenter_results(experimenter_id, start_date, end_date):
         },
     )
 
+    return __convert_to_dict(cursor.fetchall())
+
+
+def get_patients():
+    cursor.execute(
+        "SELECT * FROM Patient INNER JOIN Person ON Patient.NationalId=Person.NationalId",
+    )
     return __convert_to_dict(cursor.fetchall())
 
 

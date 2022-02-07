@@ -1,4 +1,5 @@
-from src.project import *
+# from src.project import *
+from project import *
 
 # add employees
 
