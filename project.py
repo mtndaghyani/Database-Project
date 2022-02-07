@@ -11,6 +11,7 @@ connection = psycopg2.connect(
 )
 cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
+
 # ok
 def __convert_to_dict(selected_rows):
     rows = []
@@ -24,16 +25,16 @@ def __convert_to_dict(selected_rows):
 
 # ok
 def __add_person(
-    national_id,
-    fname,
-    lname,
-    gender,
-    bithday,
-    is_married,
-    phonenumber,
-    street,
-    alley,
-    no,
+        national_id,
+        fname,
+        lname,
+        gender,
+        bithday,
+        is_married,
+        phonenumber,
+        street,
+        alley,
+        no,
 ):
     cursor.execute(
         "INSERT INTO Person VALUES(%(national_id)s, %(fname)s, %(lname)s, %(gender)s, %(birthday)s, %(is_married)s, %(phonenumber)s, %(street)s, %(alley)s, %(no)s);",
@@ -54,19 +55,19 @@ def __add_person(
 
 # ok
 def __add_employee(
-    national_id,
-    fname,
-    lname,
-    gender,
-    bithday,
-    is_married,
-    phonenumber,
-    street,
-    alley,
-    no,
-    contract_start_date,
-    contract_end_date,
-    salary,
+        national_id,
+        fname,
+        lname,
+        gender,
+        bithday,
+        is_married,
+        phonenumber,
+        street,
+        alley,
+        no,
+        contract_start_date,
+        contract_end_date,
+        salary,
 ):
     __add_person(
         national_id,
@@ -94,20 +95,20 @@ def __add_employee(
 
 # ok
 def add_patient(
-    national_id,
-    fname,
-    lname,
-    gender,
-    bithday,
-    is_married,
-    phonenumber,
-    street,
-    alley,
-    no,
-    insurance_name,
-    insurance_exp_date,
-    weight,
-    height,
+        national_id,
+        fname,
+        lname,
+        gender,
+        bithday,
+        is_married,
+        phonenumber,
+        street,
+        alley,
+        no,
+        insurance_name,
+        insurance_exp_date,
+        weight,
+        height,
 ):
     __add_person(
         national_id,
@@ -138,21 +139,21 @@ def add_patient(
 
 # ok
 def add_employee(
-    national_id,
-    fname,
-    lname,
-    gender,
-    bithday,
-    is_married,
-    phonenumber,
-    street,
-    alley,
-    no,
-    contract_start_date,
-    contract_end_date,
-    salary,
-    table_name,
-    gmc_number,
+        national_id,
+        fname,
+        lname,
+        gender,
+        bithday,
+        is_married,
+        phonenumber,
+        street,
+        alley,
+        no,
+        contract_start_date,
+        contract_end_date,
+        salary,
+        table_name,
+        gmc_number,
 ):
     __add_employee(
         national_id,
@@ -195,6 +196,34 @@ def add_insurance_company(insurance_name, percentage, limit, start_date, end_dat
         },
     )
     connection.commit()
+
+
+# ok
+def delete_insurance_company(insurance_name):
+    cursor.execute(
+        "DELETE FROM InsuranceCompany WHERE InsuranceName=%(insurance_name)s",
+        {"insurance_name": insurance_name},
+    )
+    connection.commit()
+
+
+# ok
+def update_insurance_company(insurance_name, **kwargs):
+    cursor.execute(
+        "UPDATE InsuranceCompany "
+        + _get_insurance_company_update_sets(**kwargs)
+        + "WHERE InsuranceName = %(insurance_name)s",
+        {"insurance_name": insurance_name},
+    )
+    connection.commit()
+
+
+def _get_insurance_company_update_sets(**kwargs):
+    result = 'SET '
+    for (key, value) in kwargs.items():
+        value = value if isinstance(value, int) else f'\'{value}\''
+        result += f'"{key}" = {value} ' + ', '
+    return result[:-2]
 
 
 # ok
@@ -286,12 +315,12 @@ def add_sample(patient_id, exp_name, sampler_id):
 
 # ok
 def add_result(
-    experimenter_id,
-    prescription_id,
-    sample_id,
-    experiment_date,
-    description,
-    comment,
+        experimenter_id,
+        prescription_id,
+        sample_id,
+        experiment_date,
+        description,
+        comment,
 ):
     cursor.execute(
         "INSERT INTO Result VALUES(%(experimenter_id)s, %(prescription_id)s, %(sample_id)s, %(experiment_date)s, %(description)s, %(comment)s)",
@@ -336,13 +365,13 @@ def add_pay_check(employee_id, date, amount):
 
 # ok
 def get_patient_prescriptions(patient_id, start_date, end_date):
-
     cursor.execute(
         'SELECT ReferDoctor, "Date", Expenses, TotalCost, PreparationDate FROM Prescription WHERE PatientId=(%(patient_id)s) AND PreparationDate > (%(start_date)s) AND PreparationDate < (%(end_date)s)',
         {"patient_id": patient_id, "start_date": start_date, "end_date": end_date},
     )
 
     return __convert_to_dict(cursor.fetchall())
+
 
 # ok
 def update_person_info(national_id, updates):
@@ -386,7 +415,6 @@ def get_experimenter_results(experimenter_id, start_date, end_date):
 
 # ok
 def get_experimenters_patients(experimenter_id, start_date, end_date):
-
     cursor.execute(
         "SELECT * FROM Patient INNER JOIN Person ON Patient.NationalId=Person.NationalId WHERE Patient.NationalId IN "
         + "(SELECT PatientId FROM Prescription WHERE PrescriptionId IN "
@@ -445,6 +473,7 @@ def calculate_work_hours():
         'SELECT EmployeeId, SUM(EXTRACT(HOUR FROM "End") - EXTRACT(HOUR FROM "Start")) AS workHoursInWeek FROM WorkDay GROUP BY EmployeeId'
     )
     return __convert_to_dict(cursor.fetchall())
+
 
 # -----------------------------------
 
