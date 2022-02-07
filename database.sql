@@ -79,7 +79,7 @@ CREATE TABLE Manager(
     FOREIGN KEY (NationalId) REFERENCES Employee(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE Secretory(
+CREATE TABLE Secretary(
     NationalId NationalIdType NOT NULL PRIMARY KEY,
     FOREIGN KEY (NationalId) REFERENCES Employee(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -121,8 +121,10 @@ CREATE TABLE Prescription(
     PrescriptionId SERIAL NOT NULL PRIMARY KEY,
     PatientId NationalIdType NOT NULL,
     ReferDoctor VARCHAR(128) NOT NULL,
+    "Date" DateType NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Expenses CurrencyType NOT NULL DEFAULT 0,
-    "Date" DateType NOT NULL,
+    TotalCost CurrencyType NOT NULL DEFAULT 0,
+    PreparationDate DateType NOT NULL,
     FOREIGN KEY(PatientId) REFERENCES Patient(NationalId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -135,65 +137,38 @@ CREATE TABLE RelatedTo(
 
 );
 
-CREATE TABLE Receipt(
-    ReceiptId SERIAL NOT NULL PRIMARY KEY,
-    PrescriptionId INTEGER NOT NULL,
-    PatientId NationalIdType NOT NULL,
-    TotalCost CurrencyType NOT NULL,
-    PreparationDate DateType NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(PatientId) REFERENCES Patient(NationalId) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY(PrescriptionId) REFERENCES Prescription(PrescriptionId) ON DELETE CASCADE ON UPDATE CASCADE
-);
 
-
-CREATE OR REPLACE FUNCTION create_receipt() RETURNS trigger AS $create_receipt$
+CREATE OR REPLACE FUNCTION calculate_costs() RETURNS trigger AS $calculate_costs$
+    DECLARE diff_expenses CurrencyType;
+    DECLARE prescription_row Prescription%ROWTYPE;
+    DECLARE valid_insurance InsuranceCompany%ROWTYPE;
     BEGIN
-        INSERT INTO Receipt(PatientId, TotalCost, PrescriptionId) VALUES (NEW.PatientId, NEW.Expenses, NEW.PrescriptionId);
-	    RETURN NEW;
-    END;
-$create_receipt$ LANGUAGE plpgsql;
+        diff_expenses := (SELECT ExperimentCost FROM Experiment WHERE ExperimentName = NEW.ExperimentName);
+        SELECT * INTO prescription_row FROM Prescription WHERE Prescription.PrescriptionId = NEW.PrescriptionId;
+        SELECT * INTO valid_insurance FROM InsuranceCompany WHERE InsuranceCompany.InsuranceName = (SELECT Patient.InsuranceName FROM Patient WHERE Patient.NationalId = prescription_row.PatientId AND Patient.InsuranceExpirationDate >= InsuranceCompany.StartDate AND Patient.InsuranceExpirationDate <= InsuranceCompany.EndDate AND prescription_row."Date" >= InsuranceCompany.StartDate AND prescription_row."Date" <= Patient.InsuranceExpirationDate);
+        -- calculate Expenses in Prescription
+        UPDATE Prescription 
+        SET Expenses = Prescription.Expenses + diff_expenses,
 
-CREATE OR REPLACE TRIGGER create_receipt AFTER INSERT ON Prescription 
-    FOR EACH ROW EXECUTE FUNCTION create_receipt();
-
-
-CREATE OR REPLACE FUNCTION calculate_total_cost() RETURNS trigger AS $calculate_total_cost$
-    BEGIN
-
-        IF (SELECT Count(*) FROM InsuranceCompany WHERE InsuranceName = (SELECT Patient.InsuranceName FROM Patient WHERE NationalId = NEW.PatientId)) = 0 THEN
-            UPDATE Receipt SET
-                TotalCost = NEW.Expenses 
-                WHERE NEW.PrescriptionId=Receipt.PrescriptionId;
-        END IF;
-        IF (SELECT Count(*) FROM InsuranceCompany WHERE InsuranceName = (SELECT Patient.InsuranceName FROM Patient WHERE NationalId = NEW.PatientId)) > 0 THEN
-            UPDATE Receipt SET
-                TotalCost = NEW.Expenses * (
-                    100 - (SELECT "Percentage" FROM InsuranceCompany  WHERE InsuranceName = (SELECT Patient.InsuranceName FROM Patient WHERE NationalId=NEW.PatientId))
-                    ) / 100
-                    
-                WHERE NEW.PrescriptionId=Receipt.PrescriptionId;
-        END IF;
-        RETURN NEW;
-    END;
-$calculate_total_cost$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER calculate_total_cost AFTER UPDATE OF Expenses ON Prescription 
-    FOR EACH ROW EXECUTE FUNCTION calculate_total_cost();
-
-
-CREATE OR REPLACE FUNCTION calculate_expenses() RETURNS trigger AS $calculate_expenses$
-    BEGIN
-        UPDATE Prescription SET 
-        Expenses = Prescription.Expenses + (SELECT ExperimentCost FROM Experiment 
-        WHERE ExperimentName = NEW.ExperimentName)
+        -- calculate TotalCost in Prescription
+        TotalCost = 
+        CASE
+            WHEN valid_insurance IS NOT NULL THEN
+                CASE 
+                    WHEN ((diff_expenses * (valid_insurance."Percentage") / 100) + Expenses - TotalCost > valid_insurance."Limit") THEN 
+                    TotalCost + (diff_expenses * (100 - valid_insurance."Percentage") / 100 ) + (diff_expenses * (valid_insurance."Percentage") / 100 ) + Expenses - TotalCost - valid_insurance."Limit"
+                    ELSE TotalCost + ( diff_expenses * (100 - valid_insurance."Percentage") / 100 )
+                END
+            ELSE TotalCost + diff_expenses
+        END
         WHERE Prescription.PrescriptionId = NEW.PrescriptionId;
 
 	    RETURN NEW;
     END;
-$calculate_expenses$ LANGUAGE plpgsql;
+$calculate_costs$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER expenses_trigger AFTER INSERT ON RelatedTo 
-    FOR EACH ROW EXECUTE FUNCTION calculate_expenses(); 
+CREATE OR REPLACE TRIGGER prescription_trigger AFTER INSERT ON RelatedTo 
+    FOR EACH ROW EXECUTE FUNCTION calculate_costs(); 
 
 CREATE TABLE "Sample"(
     SampleId SERIAL NOT NULL PRIMARY KEY,
@@ -209,15 +184,14 @@ CREATE TABLE "Sample"(
 
 CREATE TABLE Result(
     ExperimenterId NationalIdType NOT NULL,
-    ReceiptId INTEGER NOT NULL,
-    PrescriptionId INTEGER NOT NULL UNIQUE,
+    PrescriptionId INTEGER NOT NULL,
     SampleId INTEGER NOT NULL,
     ExperimentDate DateType NOT NULL,
     "Description" VARCHAR(256),
     "Comment" VARCHAR(256),
-    PRIMARY KEY(ExperimenterId, ReceiptId),
-    FOREIGN KEY(ReceiptId) REFERENCES Receipt(ReceiptId),
-    FOREIGN KEY(ExperimenterId) REFERENCES Experimenter(NationalId)
+    PRIMARY KEY(ExperimenterId, PrescriptionId),
+    FOREIGN KEY(ExperimenterId) REFERENCES Experimenter(NationalId),
+    FOREIGN KEY(PrescriptionId) REFERENCES Prescription(PrescriptionId),
 );
 
 CREATE TABLE WorkDay(
