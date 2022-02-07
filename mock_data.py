@@ -8,6 +8,9 @@ add_employee("2222222222", "fsecretary", "lsecretary", "F", "2005-2-21", False, 
 
 add_employee("3333333333", "fdotor", "ldoctor", "M", "2000-2-21", True, "09123333333", "s3", "a3", 3, "2020-1-1",
              "2023-1-1", 9000000, "Doctor", 33333)
+add_employee("1515151515", "farid", "faridi", "M", "2000-2-21", False, "09122112222", "s222", "a2222", 2,
+             "2021-1-1", "2022-1-1", 1200000, "Doctor", 45312)
+
 add_employee("4444444444", "fexperimenter", "lexperimenter", "F", "1999-2-21", False, "09124444444", "s5", "a5", 4,
              "2022-1-1", "2024-1-1", 7000000, "Experimenter", 44444)
 
@@ -46,11 +49,27 @@ add_insurance_company("bime4", 10, 8000000, "2020-1-1", "2024-1-1")
 
 # disease background
 add_disease_background("hiv", "5555555555", "2013-1-1", "2019-1-1")
-add_disease_background("Migraine", "8888888888", "2013-1-1", "2019-1-1")
+add_disease_background("Migraine", "5555555555", "2015-1-1", "2018-1-1")
+add_disease_background("HeartAttack", "6666666666", "2012-1-1", "2014-1-1")
+add_disease_background("Covid-19", "6666666666", "2020-1-1", "2021-1-1")
+add_disease_background("Diabetes", "7777777777", "2010-1-1", "2021-1-1")
+add_disease_background("Diabetes", "8888888888", "2015-1-1", "2019-1-1")
+add_disease_background("Cancer", "9999999999", "2011-1-1", "2013-1-1")
+add_disease_background("HeartAttack", "9999999999", "2009-1-1", "2010-1-1")
+add_disease_background("hiv", "1010101010", "2017-1-1", "2018-1-1")
+add_disease_background("Covid-19", "1212121212", "2012-1-1", "2015-1-1")
+
 
 # education degree
 add_education_degree("4444444444", "ampolzani", "tehran", "2013-1-1", "2019-1-1")
 add_education_degree("3333333333", "maqz", "beheshti", "2013-1-1", "2019-1-1")
+add_education_degree("5151515151", "az", "tehran", "2010-1-1", "2018-1-1")
+add_education_degree("0909090909", "az", "Azad", "2013-1-1", "2021-1-1")
+add_education_degree("5151515151", "maqz", "beheshti", "2013-1-1", "2019-1-1")
+add_education_degree("1515151515", "ghalb", "tehran", "2000-1-1", "2006-1-1")
+
+
+
 
 # experiments
 add_experiment("edrar", 100000)
@@ -64,12 +83,50 @@ add_prescription("5555555555", "noskhe", "2021-01-11","2021-01-15", ["edrar", "m
 add_prescription("6666666666", "hi", "2021-01-11","2021-02-15", ["khon", "Pregnancy"])
 add_prescription("7777777777", "hehe", "2021-01-21","2021-03-15", ["khon", "checkUP", "madfo"])
 add_prescription("5555555555", "noskhe2", "2021-01-01", "2021-01-05",["madfo", "khon", "edrar"])
+add_prescription("9999999999", "noskhe3", "2020-01-01", "2022-01-10",["madfo", "khon", "checkUp"])
+add_prescription("1010101010", "noskhe4", "2019-02-01", "2019-01-05",["edrar"])
+add_prescription("1010101010", "noskhe5", "2019-03-01", "2019-03-15",["Pregnancy"])
+add_prescription("1212121212", "noskhe6", "2021-03-02", "2021-04-01",["madfo", "khon", "checkUp", "Pregnancy"])
+add_prescription("1212121212", "noskhe7", "2021-02-10", "2021-02-16",["madfo"])
+add_prescription("1313131313", "noskhe8", "2021-09-02", "2021-09-10",["checkUp", "edrar"])
+add_prescription("6666666666", "noskhe9", "2019-01-02", "2021-01-09",["madfo", "khon"])
+
+
+
+
+
+
 
 # Sample
 add_sample("5555555555", "madfo", "5151515151")
 add_sample("5555555555", "edrar", "0909090909")
+add_sample("5555555555", "madfo", "5151515151")
+add_sample("5555555555", "edrar", "5151515151")
+add_sample("5555555555", "madfo", "0909090909")
+add_sample("5555555555", "khon", "0909090909")
 add_sample("6666666666", "khon", "0909090909")
+add_sample("6666666666", "khon", "5151515151")
+add_sample("6666666666", "Pregnancy", "5151515151")
+add_sample("6666666666", "madfo", "0909090909")
 add_sample("7777777777", "khon", "5151515151")
+add_sample("7777777777", "checkUp", "0909090909")
+add_sample("7777777777", "madfo", "5151515151")
+add_sample("9999999999", "madfo", "0909090909")
+add_sample("9999999999", "khon", "5151515151")
+add_sample("9999999999", "checkUp", "5151515151")
+add_sample("1010101010", "Pregnancy", "0909090909")
+add_sample("1010101010", "edrar", "5151515151")
+add_sample("1212121212", "madfo", "5151515151")
+add_sample("1212121212", "madfo", "0909090909")
+add_sample("1212121212", "khon", "5151515151")
+add_sample("1212121212", "checkUp", "5151515151")
+add_sample("1212121212", "Pregnancy", "0909090909")
+add_sample("1313131313", "edrar", "5151515151")
+add_sample("1313131313", "checkUp", "0909090909")
+
+
+
+
 
 # work day
 add_work_day("2222222222", "Monday", "08:00:00", "22:00:00", 9, "09125363104")
