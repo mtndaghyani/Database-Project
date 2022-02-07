@@ -1,5 +1,7 @@
 -- CREATE DATABASE laboratory;
 
+CREATE EXTENSION pgcrypto;
+
 CREATE DOMAIN NationalIdType AS CHAR(10) CHECK (LENGTH(VALUE) = 10);
 
 CREATE DOMAIN DateType AS TIMESTAMP WITH TIME ZONE;
@@ -25,9 +27,21 @@ CREATE DOMAIN DayType AS VARCHAR(10) CHECK(
     )
 );
 
+CREATE DOMAIN RoleType AS VARCHAR(12) CHECK(
+    VALUE IN (
+        'Manager',
+        'Doctor',
+        'Sampler',
+        'Experimenter',
+        'Patient',
+        'Secretary'
+    )
+);
 
 CREATE TABLE Person(
     NationalId NationalIdType NOT NULL PRIMARY KEY,
+    "Password" TEXT NOT NULL,
+    "Role" RoleType NOT NULL,
     FName VARCHAR(512) NOT NULL,
     LName VARCHAR(512) NOT NULL,
     Gender GenderType NOT NULL,
@@ -191,7 +205,7 @@ CREATE TABLE Result(
     "Comment" VARCHAR(256),
     PRIMARY KEY(ExperimenterId, PrescriptionId),
     FOREIGN KEY(ExperimenterId) REFERENCES Experimenter(NationalId),
-    FOREIGN KEY(PrescriptionId) REFERENCES Prescription(PrescriptionId),
+    FOREIGN KEY(PrescriptionId) REFERENCES Prescription(PrescriptionId)
 );
 
 CREATE TABLE WorkDay(
