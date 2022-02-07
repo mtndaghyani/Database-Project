@@ -535,3 +535,25 @@ def delete_sample(sample_id):
         "DELETE FROM SAMPLE WHERE SampleId=%(sample_id)s", {"sample_id": sample_id}
     )
     connection.commit()
+
+# Manager Is needed To start The Project
+if __name__ == "__main__":
+    add_employee(
+        "1111111111",
+        "pass1",
+        MANAGER,
+        "fmanager",
+        "lmanager",
+        "M",
+        "2001-2-21",
+        False,
+        "09121111111",
+        "s1",
+        "a1",
+        1,
+        "2020-1-1",
+        "2021-1-1",
+        10000000,
+        MANAGER,
+        None,
+    )
